@@ -20,7 +20,7 @@ test("buildRecordEntries sorts caffeine logs newest first with remaining caffein
     ["noon", "morning", "yesterday"],
   );
   assert.equal(entries[0].amountMg, 80);
-  assert.equal(entries[0].remainingMg, 75);
+  assert.equal(entries[0].remainingMg, 57);
   assert.equal(entries[2].timeLabel, "오후 9:00");
 });
 

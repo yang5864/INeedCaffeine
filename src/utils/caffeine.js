@@ -1,4 +1,4 @@
-export const HALF_LIFE_HOURS = 5;
+export const HALF_LIFE_HOURS = 1;
 export const DAILY_MAX_MG = 400;
 
 export function clamp(value, min, max) {
