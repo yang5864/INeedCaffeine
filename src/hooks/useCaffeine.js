@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   DAILY_MAX_MG,
   calculateCurrentMg,
@@ -6,39 +6,61 @@ import {
   getCaffeinePercent,
   getEnergyState,
 } from "../utils/caffeine";
+import { parseStoredCaffeineLogs, syncCaffeineLogsSnapshot } from "../utils/caffeineLogs.js";
 
 const STORAGE_KEY = "ineedcaffeine.logs.v1";
+const STORAGE_SYNC_INTERVAL_MS = 500;
 
-function readLogs() {
-  try {
-    const value = localStorage.getItem(STORAGE_KEY);
-    if (value) {
-      const parsed = JSON.parse(value);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    }
-    return [
-      {
-        id: "demo-maximum-caffeine",
-        amountMg: 400,
-        timestamp: Date.now(),
-      },
-    ];
-  } catch {
-    return [];
-  }
+function readLogsRaw() {
+  return localStorage.getItem(STORAGE_KEY) ?? "";
 }
 
 function writeLogs(logs) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+  const raw = JSON.stringify(logs);
+  localStorage.setItem(STORAGE_KEY, raw);
+  return raw;
 }
 
-export function useCaffeine(dailyLimitMg = DAILY_MAX_MG) {
-  const [logs, setLogs] = useState(readLogs);
+export function useCaffeine(dailyLimitMg = DAILY_MAX_MG, halfLifeHours) {
+  const lastRawRef = useRef("");
+  const [logs, setLogs] = useState(() => {
+    const raw = readLogsRaw();
+    lastRawRef.current = raw;
+    return parseStoredCaffeineLogs(raw);
+  });
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
-    writeLogs(logs);
+    lastRawRef.current = writeLogs(logs);
   }, [logs]);
+
+  const syncFromStorage = useCallback(() => {
+    const didSync = syncCaffeineLogsSnapshot({
+      rawValue: readLogsRaw(),
+      lastRawRef,
+      onLogsChange: setLogs,
+    });
+
+    if (didSync) {
+      setNow(Date.now());
+    }
+  }, []);
+
+  useEffect(() => {
+    function handleStorage(event) {
+      if (event.key === STORAGE_KEY || event.key === null) {
+        syncFromStorage();
+      }
+    }
+
+    window.addEventListener("storage", handleStorage);
+    const timer = window.setInterval(syncFromStorage, STORAGE_SYNC_INTERVAL_MS);
+
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.clearInterval(timer);
+    };
+  }, [syncFromStorage]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 30_000);
@@ -57,7 +79,7 @@ export function useCaffeine(dailyLimitMg = DAILY_MAX_MG) {
   }, []);
 
   const stats = useMemo(() => {
-    const currentMg = calculateCurrentMg(logs, now);
+    const currentMg = calculateCurrentMg(logs, now, halfLifeHours);
     const percent = getCaffeinePercent(currentMg, dailyLimitMg);
     const todayStart = new Date(now);
     todayStart.setHours(0, 0, 0, 0);
@@ -72,12 +94,13 @@ export function useCaffeine(dailyLimitMg = DAILY_MAX_MG) {
       state: getEnergyState(percent),
       bpm: estimateBpm(percent),
     };
-  }, [dailyLimitMg, logs, now]);
+  }, [dailyLimitMg, halfLifeHours, logs, now]);
 
   return {
     logs,
     now,
     dailyLimitMg,
+    halfLifeHours,
     addCaffeine,
     ...stats,
   };

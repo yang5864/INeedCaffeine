@@ -19,6 +19,7 @@ import backgroundLow from "./assets/backgrounds/40_20_background.png";
 import backgroundEmpty from "./assets/backgrounds/20_0_background.png";
 import { useCaffeine } from "./hooks/useCaffeine.js";
 import { useProfile } from "./hooks/useProfile.js";
+import { getSensitivityOption } from "./utils/profile.js";
 
 const backgroundImages = {
   high: backgroundHigh,
@@ -48,7 +49,8 @@ const maxCaffeineAudio =
 
 export default function App() {
   const { profile, updateProfile } = useProfile();
-  const caffeine = useCaffeine(profile.dailyLimitMg);
+  const sensitivity = getSensitivityOption(profile.sensitivity);
+  const caffeine = useCaffeine(profile.dailyLimitMg, sensitivity.halfLifeHours);
   const [particles, setParticles] = useState([]);
   const [activeTab, setActiveTab] = useState("home");
   const [toast, setToast] = useState("");
@@ -133,21 +135,24 @@ export default function App() {
             />
           </AnimatePresence>
 
-          <CaffeineDisplay percent={caffeine.percent} />
-
           <AnimatePresence mode="wait">
             {activeTab === "stats" ? (
               <StatsView key="stats" caffeine={caffeine} />
             ) : activeTab === "records" ? (
               <motion.div
                 key="records"
-                className="relative mb-28 flex min-h-0 flex-1 items-start justify-center overflow-y-auto px-4 pb-6 pt-4 md:px-10 lg:mb-[116px] lg:px-14"
+                className="relative mb-28 flex min-h-0 flex-1 items-center justify-center overflow-hidden px-4 pb-3 pt-4 md:px-10 lg:mb-[104px] lg:pl-14 lg:pr-36"
                 initial={{ opacity: 0, y: 18, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -12, scale: 0.98 }}
                 transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
               >
-                <RecordsPanel logs={caffeine.logs} now={caffeine.now} dailyLimitMg={caffeine.dailyLimitMg} />
+                <RecordsPanel
+                  logs={caffeine.logs}
+                  now={caffeine.now}
+                  dailyLimitMg={caffeine.dailyLimitMg}
+                  halfLifeHours={caffeine.halfLifeHours}
+                />
               </motion.div>
             ) : activeTab === "profile" ? (
               <ProfilePanel
@@ -165,11 +170,13 @@ export default function App() {
                 exit={{ opacity: 0, y: -12 }}
                 transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
               >
+                <CaffeineDisplay percent={caffeine.percent} />
+
                 <div className="order-2 lg:absolute lg:bottom-[136px] lg:left-[4%] lg:z-20 lg:h-[400px] lg:w-[340px] xl:w-[380px]">
                   <AddCaffeinePanel onAdd={handleAdd} particles={particles} />
                 </div>
 
-                <div className="order-1 lg:absolute lg:left-1/2 lg:top-[45%] lg:z-10 lg:w-[min(42vw,620px)] lg:-translate-x-1/2 lg:-translate-y-1/2">
+                <div className="order-1 lg:absolute lg:left-1/2 lg:top-[52%] lg:z-0 lg:w-[min(42vw,620px)] lg:-translate-x-1/2 lg:-translate-y-1/2">
                   <Mascot percent={caffeine.percent} state={caffeine.state} />
                 </div>
 

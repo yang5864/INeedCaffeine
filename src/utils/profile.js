@@ -1,21 +1,23 @@
+import { DAILY_MAX_MG } from "./caffeine.js";
+
 export const DEFAULT_PROFILE = {
   displayName: "Caffy Keeper",
-  dailyLimitMg: 400,
+  dailyLimitMg: DAILY_MAX_MG,
   sensitivity: "normal",
   muted: false,
   easterEggEnabled: true,
 };
 
 export const DAILY_LIMIT_RANGE = {
-  min: 100,
-  max: 600,
-  step: 20,
+  min: 52,
+  max: 312,
+  step: 13,
 };
 
 export const SENSITIVITY_OPTIONS = [
-  { key: "low", label: "느긋함", note: "천천히 반응" },
-  { key: "normal", label: "보통", note: "균형 타입" },
-  { key: "high", label: "예민함", note: "조심 모드" },
+  { key: "low", label: "느긋함", note: "카페인 잘 안 받는 타입", dailyLimitMg: 208, halfLifeHours: 0.75 },
+  { key: "normal", label: "보통", note: "컴포즈 아메리카노 1잔 기준", dailyLimitMg: DAILY_MAX_MG, halfLifeHours: 1 },
+  { key: "high", label: "예민함", note: "카페인 잘 받는 타입", dailyLimitMg: 104, halfLifeHours: 1.5 },
 ];
 
 export function normalizeProfile(value) {

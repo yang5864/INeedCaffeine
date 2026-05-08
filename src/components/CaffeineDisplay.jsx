@@ -1,5 +1,6 @@
 import { animate, motion, useMotionValue, useTransform } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import { CAFFEINE_BASELINE_LABEL } from "../utils/caffeine.js";
 import { getCaffeineLevelVisual } from "../utils/caffeineVisuals.js";
 
 export default function CaffeineDisplay({ percent }) {
@@ -41,6 +42,7 @@ export default function CaffeineDisplay({ percent }) {
       <p className={`relative z-10 text-[13px] font-bold uppercase tracking-[0.22em] ${visual.labelClass} drop-shadow-sm`}>
         CAFFEINE LEVEL
       </p>
+      <p className="relative z-10 mt-1 text-xs font-black text-white/78 drop-shadow-sm">{CAFFEINE_BASELINE_LABEL}</p>
       <div className={`relative z-10 mt-1 flex items-end justify-center transition-colors duration-300 ${visual.numberClass}`}>
         <motion.strong className="text-[72px] font-black leading-none md:text-[96px]">
           {rounded}

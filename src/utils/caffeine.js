@@ -1,5 +1,6 @@
 export const HALF_LIFE_HOURS = 1;
-export const DAILY_MAX_MG = 400;
+export const DAILY_MAX_MG = 156;
+export const CAFFEINE_BASELINE_LABEL = "컴포즈 커피 아이스 아메리카노 1잔 기준";
 
 export function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
@@ -11,8 +12,8 @@ export function getRemainingCaffeine(amountMg, timestamp, now = Date.now(), half
   return amountMg * Math.pow(0.5, elapsedHours / halfLife);
 }
 
-export function calculateCurrentMg(logs, now = Date.now()) {
-  return logs.reduce((total, log) => total + getRemainingCaffeine(log.amountMg, log.timestamp, now), 0);
+export function calculateCurrentMg(logs, now = Date.now(), halfLife = HALF_LIFE_HOURS) {
+  return logs.reduce((total, log) => total + getRemainingCaffeine(log.amountMg, log.timestamp, now, halfLife), 0);
 }
 
 export function getCaffeinePercent(currentMg, dailyMaxMg = DAILY_MAX_MG) {

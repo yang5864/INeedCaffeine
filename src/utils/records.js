@@ -38,19 +38,19 @@ function formatKoreanTime(timestamp) {
   return `${hour < 12 ? "오전" : "오후"} ${displayHour}:${minute}`;
 }
 
-export function buildRecordEntries(logs, now = Date.now()) {
+export function buildRecordEntries(logs, now = Date.now(), halfLifeHours) {
   return [...logs]
     .sort((a, b) => b.timestamp - a.timestamp)
     .map((log) => ({
       ...log,
       amountMg: Math.round(log.amountMg),
-      remainingMg: Math.round(getRemainingCaffeine(log.amountMg, log.timestamp, now)),
+      remainingMg: Math.round(getRemainingCaffeine(log.amountMg, log.timestamp, now, halfLifeHours)),
       timeLabel: formatKoreanTime(log.timestamp),
     }));
 }
 
-export function buildDailyRecords(logs, now = Date.now()) {
-  const entries = buildRecordEntries(logs, now);
+export function buildDailyRecords(logs, now = Date.now(), halfLifeHours) {
+  const entries = buildRecordEntries(logs, now, halfLifeHours);
   const groups = new Map();
 
   entries.forEach((entry) => {
@@ -81,10 +81,10 @@ export function buildDailyRecords(logs, now = Date.now()) {
     }));
 }
 
-export function buildRecordsSummary(logs, now = Date.now(), dailyLimitMg = DAILY_MAX_MG) {
-  const days = buildDailyRecords(logs, now);
+export function buildRecordsSummary(logs, now = Date.now(), dailyLimitMg = DAILY_MAX_MG, halfLifeHours) {
+  const days = buildDailyRecords(logs, now, halfLifeHours);
   const allTimeMg = logs.reduce((total, log) => total + log.amountMg, 0);
-  const currentMg = calculateCurrentMg(logs, now);
+  const currentMg = calculateCurrentMg(logs, now, halfLifeHours);
   const largestDay = days.reduce((best, day) => (day.totalMg > best.totalMg ? day : best), {
     dayLabel: "-",
     totalMg: 0,
