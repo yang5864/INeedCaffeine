@@ -6,6 +6,7 @@ import BackgroundBackdrop from "./components/BackgroundBackdrop.jsx";
 import BottomDock from "./components/BottomDock.jsx";
 import CaffeineDisplay from "./components/CaffeineDisplay.jsx";
 import EasterEggOverlay from "./components/EasterEggOverlay.jsx";
+import EasterEggReplayButton from "./components/EasterEggReplayButton.js";
 import Mascot from "./components/Mascot.jsx";
 import ProfilePanel from "./components/ProfilePanel.jsx";
 import RecordsPanel from "./components/RecordsPanel.jsx";
@@ -19,6 +20,7 @@ import backgroundLow from "./assets/backgrounds/40_20_background.png";
 import backgroundEmpty from "./assets/backgrounds/20_0_background.png";
 import { useCaffeine } from "./hooks/useCaffeine.js";
 import { useProfile } from "./hooks/useProfile.js";
+import { shouldReplayEasterEggOnCaffeineAdd } from "./utils/easterEgg.js";
 import { getSensitivityOption } from "./utils/profile.js";
 
 const backgroundImages = {
@@ -80,6 +82,11 @@ export default function App() {
   }, [caffeine.percent, profile.easterEggEnabled]);
 
   function handleAdd(amountMg, source = "button") {
+    const shouldReplayEasterEgg = shouldReplayEasterEggOnCaffeineAdd({
+      currentPercent: caffeine.percent,
+      easterEggEnabled: profile.easterEggEnabled,
+    });
+
     caffeine.addCaffeine(amountMg);
     const particle = {
       id: `${Date.now()}-${Math.random()}`,
@@ -91,6 +98,10 @@ export default function App() {
     window.setTimeout(() => {
       setParticles((current) => current.filter((item) => item.id !== particle.id));
     }, 1100);
+
+    if (shouldReplayEasterEgg) {
+      setShowEasterEgg(true);
+    }
   }
 
   function handleNavigate(tab) {
@@ -117,6 +128,8 @@ export default function App() {
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           className="relative flex h-screen min-h-[620px] w-full max-w-[1480px] flex-col overflow-hidden lg:min-h-[640px]"
         >
+          <EasterEggReplayButton visible={activeTab === "home"} onClick={() => setShowEasterEgg(true)} />
+
           <button
             type="button"
             aria-label="settings"
